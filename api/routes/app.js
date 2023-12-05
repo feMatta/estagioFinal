@@ -2,30 +2,47 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const User = require('../models/User');
+var cors = require('cors')
+app.use(cors())
+// const Script = require('../Script');
+// import {readXMLFile} from '../Script';
 
 app.use(bodyParser.json());
+  
 
-app.get("/", async(_, res) => {
-    res.send(readXMLFile());
-});
+app.post("/", async (req, res) => {
+    try {
+      await User.create(req.body);
+      res.json({
+        mensagem: "Cliente cadastrado com sucesso"
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({
+        mensagem: "Erro: Cliente não cadastrado com sucesso"
+      });
+    }
+  });
+  
 
-app.post("/", async(req, res) => {
-    console.log(req.body);
 
-    await User.create(req.body)
-    .then(() => {
-        return res.json({
-            erro: false,
-            mensagem: "Cliente cadastrado com sucesso"
-        });
-    }).catch(() => {
-        return res.status(400).json({
-            erro: true,
-            mensagem: "Erro: Cliente não cadastrado com sucesso"
-        });
-    });
-});
+app.get('/databaseEmpresa', async (_, res) => {
+    try {
+      const databaseEmpresa = await User.findAll({
+        attributes: ['CNPJ', 'xNome', 'vNF', 'dVenc', 'xLgr', 'nro', 'xBairro', 'xMun', 'UF', 'CEP'],
+      });
+  
+      if (databaseEmpresa) {
+        res.json(databaseEmpresa);
+      } else {
+        res.status(404).json({ error: 'Nenhum dado encontrado' });
+      }
+    } catch (error) {
+      console.error('Erro ao obter dados do banco de dados:', error);
+      res.status(500).json({ error: 'Erro ao obter dados do banco de dados' });
+    }
+  });
 
-app.listen(8080, () => {
+  app.listen(8080, () => {
     console.log("Iniciando na porta 8080: http://localhost:8080");
 });
